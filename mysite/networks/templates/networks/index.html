@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block main_contents %}
+    <table class="table table-bordered table-responsive">
+        <thead >
+        <tr>
+            <td>VPC ID</td>
+            <td>DHCP Option</td>
+            <td>State</td>
+            <td>CIDR</td>
+            <td>isDefault</td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for vpc in vpc_list %}
+            <tr>
+                <td>{{ vpc.id }}</td>
+                <td>{{ vpc.dhcp_options_id }}</td>
+                <td>{{ vpc.state }}</td>
+                <td>{{ vpc.cidr_block }}</td>
+                <td>{{ vpc.is_default }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+
+
+    </table>
+{% endblock %}
