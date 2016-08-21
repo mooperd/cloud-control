@@ -3,6 +3,9 @@ from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, View
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
+from django.http import HttpResponse
 from .forms import InstanceForm, SubnetForm, VpcForm
 
 from models import Vpc
@@ -15,6 +18,11 @@ def index(request):
     return TemplateResponse(request, 'networks/index.html', {'vpc_list': vpc_list})
 """
 
+class IndexView(ListView):
+    model = Vpc
+    template_name = "networks/index.html"
+
+"""
 class IndexView(View):
     model = Vpc
     template_name = "networks/index.html"
@@ -24,7 +32,6 @@ class IndexView(View):
         return TemplateResponse(request, 'networks/index.html', {'vpc_list': vpc_list})
 
 
-        """
         context = dict()
         context['formA'] = VpcForm()
         context['formB'] = SubnetForm()
@@ -47,6 +54,10 @@ class IndexView(View):
         return TemplateResponse(request, template=self.template_name,
                                 context={'formA': vpc, 'formB': subnet, 'formC': instance})
     """
+
+class VpcView(DetailView):
+    model = Vpc
+    template_name = "networks/vpc.html"
 
 class VpcCreate(CreateView):
     model = Vpc
@@ -83,7 +94,8 @@ class VpcFormView(View):
             subnet = subnet.save()
             instance.instance.subnet = subnet
             instance.save()
-            return redirect("/")
+            return redirect("/networks")
+
 
         return TemplateResponse(request, template=self.template_name,
                                 context={'formA': vpc, 'formB': subnet, 'formC': instance})

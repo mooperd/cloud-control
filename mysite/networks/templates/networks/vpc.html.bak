@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block main_contents %}
-This is index.html
-<table class="table table-bordered table-responsive">
+    <table class="table table-bordered table-responsive">
         <thead >
         <tr>
             <td>id</td>
@@ -12,17 +11,15 @@ This is index.html
         </tr>
         </thead>
         <tbody>
-        {% for vpc in vpc_list %}
 	<tr>
 		<form method="post" role="form">{% csrf_token %}
-		<td><a href="vpc/{{ vpc.id  }}/">{{ vpc.id  }}</a></td>
+                <td>{{ vpc.id  }}</td>
                 <td>{{ vpc.name }}</td>
                 <td>{{ vpc.cidr }}</td>
 		<td>{{ vpc.aws_id }}</td>
 		<td><button type="submit" class="btn btn-primary">Submit</button><deploy>
                 </form>
 	</tr>
-        {% endfor %}
         </tbody>
 
 
