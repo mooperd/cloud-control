@@ -2,6 +2,10 @@ from django import forms
 
 from models import Vpc, Subnet, Instance
 
+class IndexForm(forms.ModelForm):
+    class Meta:
+        fields = ['name', 'cidr', 'aws_id']
+	model = Vpc
 
 class VpcForm(forms.ModelForm):
     class Meta:

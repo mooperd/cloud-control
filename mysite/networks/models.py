@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.core.urlresolvers import reverse
 from django.db import models
 from ext.amazon_aws import AWSProvider
-
+from ext import log
 
 class Vpc(models.Model):
     # It might be better to pass in AWSProvider from the view.
@@ -21,15 +21,17 @@ class Vpc(models.Model):
         return self.aws_id != ""
 
     def deploy(self):
-        if self.is_active() == True:
-            return True
-        if self.is_active() == False:
-            cloud_network = self.amazon_aws.create_vpc(
-                self.name,
-                self.region,
-                self.cidr
-            )
-
+            if self.is_active() == True:
+                return True
+            if self.is_active() == False:
+	        try:
+                    self.aws_id = self.amazon_aws.create_vpc(
+                        self.name,
+                        self.region,
+                        self.cidr
+                    )
+	        except:
+	            raise
 
 # def __str__(self):              # __unicode__ on Python 2
 #        return "%s %s" % (self.first_name, self.last_name)

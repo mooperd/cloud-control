@@ -3,22 +3,24 @@
     <table class="table table-bordered table-responsive">
         <thead >
         <tr>
-            <td>VPC ID</td>
-            <td>DHCP Option</td>
-            <td>State</td>
+            <td>id</td>
+	    <td>Name</td>
             <td>CIDR</td>
-            <td>isDefault</td>
+	    <td>AWS_id</td>
+	    <td>Deploy</td>
         </tr>
         </thead>
         <tbody>
         {% for vpc in vpc_list %}
-            <tr>
-                <td>{{ vpc.id }}</td>
-                <td>{{ vpc.dhcp_options_id }}</td>
-                <td>{{ vpc.state }}</td>
-                <td>{{ vpc.cidr_block }}</td>
-                <td>{{ vpc.is_default }}</td>
-            </tr>
+	<tr>
+		<form method="post" role="form">{% csrf_token %}
+                <td>{{ vpc.id  }}</td>
+                <td>{{ vpc.name }}</td>
+                <td>{{ vpc.cidr }}</td>
+		<td>{{ vpc.aws_id }}</td>
+		<td><button type="submit" class="btn btn-primary">Submit</button><deploy>
+                </form>
+	</tr>
         {% endfor %}
         </tbody>
 

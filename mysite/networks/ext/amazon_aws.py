@@ -159,8 +159,8 @@ class AWSProvider(CloudProvider):
             "creating VPC '" + vpc_name + "'"
         )
 
-        conn = self._get_vpc_connection(vpc_region)
-        vpc = conn.create_vpc(cidr_block)
+        conn = boto.connect_vpc()
+	vpc = conn.create_vpc(cidr_block)
         self._tag_with_name(vpc, vpc_name)
         return vpc.id
 
