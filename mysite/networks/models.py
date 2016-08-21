@@ -30,8 +30,21 @@ class Vpc(models.Model):
                         self.region,
                         self.cidr
                     )
+                    self.save()
 	        except:
 	            raise
+        
+    def undeploy(self):
+            if self.is_active() == True:
+                try:
+                    self.amazon_aws.delete_vpc(
+                        self.aws_id
+                    )
+                    self.aws_id = ""
+                    self.save()
+                except:                    raise
+            if self.is_active() == False:
+                return False
 
 # def __str__(self):              # __unicode__ on Python 2
 #        return "%s %s" % (self.first_name, self.last_name)

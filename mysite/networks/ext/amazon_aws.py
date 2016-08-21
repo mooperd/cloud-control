@@ -164,6 +164,15 @@ class AWSProvider(CloudProvider):
         self._tag_with_name(vpc, vpc_name)
         return vpc.id
 
+
+    def delete_vpc(self, vpc_id):
+        """ Completely deletes a VPC with all its subnets and instances """
+        conn = boto.connect_vpc()
+        try:
+            result = conn.delete_vpc(vpc_id)
+        except:
+            raise
+
     def shutdown_all_instances_in_subnet(self, region_name, subnet_id):
         conn = self._get_ec2_connection(region_name)
 
@@ -228,8 +237,9 @@ class AWSProvider(CloudProvider):
                 if (e.code == "DependencyViolation"):
                     time.sleep(5)
 
-    def delete_vpc(self, region_name, vpc_id):
-        """ Completely deletes a VPC with all its subnets and instances """
+
+    def delete_vpc_old(self, region_name, vpc_id):
+        # Completely deletes a VPC with all its subnets and instances
         vpc_conn = self._get_vpc_connection(region_name)
 
         # delete all subnets
@@ -252,6 +262,7 @@ class AWSProvider(CloudProvider):
             except boto.exception.EC2ResponseError as e:
                 if (e.code == "DependencyViolation"):
                     time.sleep(5)
+
 
     def create_subnet(self, region_name, vpc_id, subnet_name, cidr_block, availability_zone):
         log(
