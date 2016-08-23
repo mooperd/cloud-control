@@ -21,7 +21,7 @@ This is index.html
                 <td>{{ vpc.cidr }}</td>
 		<td>{{ vpc.aws_id }}</td>
 		<td><form method="post" role="form">{% csrf_token %}<button type="submit" formmethod="get" formaction="vpc/deploy/{{ vpc.id  }}/"class="btn btn-primary">Deploy</button></form></td>
-                <td><form method="post" role="form">{% csrf_token %}<button type="submit" formmethod="get" formaction="vpc/undeploy/{{ vpc.id  }}/"class="btn btn-primary">Deploy</button></form></td>
+                <td><form method="post" role="form">{% csrf_token %}<button type="submit" formmethod="get" formaction="vpc/undeploy/{{ vpc.id  }}/"class="btn btn-primary">Undeploy</button></form></td>
 	</tr>
         {% endfor %}
         </tbody>

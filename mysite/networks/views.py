@@ -8,8 +8,9 @@ from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from .forms import InstanceForm, SubnetForm, VpcForm
-
-from models import Vpc
+from django.db.models import Prefetch
+from models import Vpc, Subnet, Instance
+from pprint import pprint
 
 """
 def index(request):
@@ -42,6 +43,16 @@ class VpcUndeploy(View):
 class VpcView(DetailView):
     model = Vpc
     template_name = "networks/vpc.html"
+
+    def get(self, request, *args, **kwargs):
+        # http://makina-corpus.com/blog/metier/2015/how-to-improve-prefetch_related-performance-with-the-prefetch-object
+        # https://timmyomahony.com/blog/misconceptions-select_related-in-django/
+        #subnet_vpc = Subnet.objects.prefetch_related(Prefetch('vpc', queryset=Vpc.objects.filter(id=kwargs['pk']))).all()
+        #subnet_vpc.filter(id=4)
+        # Maybe prefetch_related will be needed here some day.
+        subnet_vpc = Vpc.objects.prefetch_related('subnet_set').get(pk=self.kwargs['pk'])
+        pprint(subnet_vpc)
+        return TemplateResponse( request, 'networks/vpc.html', {'subnet_vpc': subnet_vpc})
 
 class VpcCreate(CreateView):
     model = Vpc
