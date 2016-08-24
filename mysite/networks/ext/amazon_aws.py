@@ -160,7 +160,7 @@ class AWSProvider(CloudProvider):
         )
 
         conn = boto.connect_vpc()
-	vpc = conn.create_vpc(cidr_block)
+        vpc = conn.create_vpc(cidr_block)
         self._tag_with_name(vpc, vpc_name)
         return vpc.id
 
@@ -264,13 +264,13 @@ class AWSProvider(CloudProvider):
                     time.sleep(5)
 
 
-    def create_subnet(self, region_name, vpc_id, subnet_name, cidr_block, availability_zone):
+    def create_subnet(self, vpc_id, subnet_name, cidr_block, availability_zone):
         log(
             availability_zone,
             "Creating Subnet '" + subnet_name + "'"
         )
 
-        conn = self._get_vpc_connection(region_name)
+        conn = boto.connect_vpc()
         subnet = conn.create_subnet(vpc_id, cidr_block, availability_zone)
         self._tag_with_name(subnet, subnet_name)
         return subnet.id

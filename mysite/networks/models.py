@@ -1,3 +1,7 @@
+"""
+An Instance (virtual machine) is a child of a Subnet which is a child of VPC (virtual private cloud)
+"""
+
 from __future__ import unicode_literals
 
 from django.core.urlresolvers import reverse
@@ -50,11 +54,43 @@ class Vpc(models.Model):
 #        return "%s %s" % (self.first_name, self.last_name)
 
 class Subnet(models.Model):
+    amazon_aws = AWSProvider()
     name = models.CharField(max_length=30, verbose_name='Subnet Name')
     cidr = models.CharField(max_length=30, verbose_name='Subnet CIDR')
     availability_zone = models.CharField(max_length=30, default="")
     aws_id = models.CharField(max_length=30, default="")
     vpc = models.ForeignKey(Vpc)
+
+    def is_active(self):
+        return self.aws_id != ""
+
+    def deploy(self, **kwargs):
+        if self.is_active() == True:
+            return True
+        if self.is_active() == False:
+            try:
+                self.aws_id = self.amazon_aws.create_subnet(
+                    kwargs['vpc_id'],
+                    self.name,
+                    self.cidr,
+                    self.availability_zone,
+                )
+                self.save()
+            except:
+                raise
+
+    def undeploy(self):
+        if self.is_active() == True:
+            try:
+                self.amazon_aws.delete_subnet(
+                    self.aws_id
+                )
+                self.aws_id = ""
+                self.save()
+            except:
+                raise
+        if self.is_active() == False:
+            return False
 
     def get_absolute_url(self):
         return reverse('subnet-detail', kwargs={'pk': self.pk})

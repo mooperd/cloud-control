@@ -47,23 +47,34 @@ class VpcView(DetailView):
                     'cidr': instance.subnet.cidr,
                     'name': instance.subnet.name,
                     'zone': instance.subnet.availability_zone,
+                    'object': instance.subnet,
                     'Instances': [],
                 }
             subnets[instance.subnet_id]['Instances'].append({
                 'name': instance.name,
                 'type': instance.type,
+                'object': instance,
             })
 
         vpc_data = {
                 'name': vpc_instance.name,
                 'cidr': vpc_instance.cidr,
                 'Subnets': subnets.values(),
+                'object': vpc_instance,
             }
+
+        # deploy stuff. this should probably be a seperate function in a new sexy "deploy" class.
+        # deploying the VPC object is simple enough but we have to tell the Subnet.deploy() the vpc ID
+        # and the Instance.deploy the subnet ID. These ID's are picked up by kwargs on the model.
+        # Are kwargs lazy? Is this spaghetti?
+        vpc_data["object"].deploy()
+        for subnet in  vpc_data["Subnets"]:
+            subnet["object"].deploy(vpc_id=vpc_data["object"].aws_id)
 
         # http://makina-corpus.com/blog/metier/2015/how-to-improve-prefetch_related-performance-with-the-prefetch-object
         # https://timmyomahony.com/blog/misconceptions-select_related-in-django/
-        #subnet_vpc = Subnet.objects.prefetch_related(Prefetch('vpc', queryset=Vpc.objects.filter(id=kwargs['pk']))).all()
-        #subnet_vpc.filter(id=4)
+        # subnet_vpc = Subnet.objects.prefetch_related(Prefetch('vpc', queryset=Vpc.objects.filter(id=kwargs['pk']))).all()
+        # subnet_vpc.filter(id=4)
         # Maybe prefetch_related will be needed here some day.
         # subnet_vpc = Vpc.objects.prefetch_related('subnet_set').get(pk=self.kwargs['pk'])
         # pprint(subnet_vpc)
