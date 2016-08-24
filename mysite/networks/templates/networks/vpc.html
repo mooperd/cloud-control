@@ -1,32 +1,5 @@
-{% extends 'base.html' %}
+{% load jsonify %}
 {% block main_contents %}
-This is vpc.html
-<div class="container-fluid">
-	<p>{{ subnet_vpc.name }} - {{ subnet_vpc.cidr }}</p>
-</div>
-<table class="table table-bordered table-responsive">
-        <thead >
-        <tr>
-            <td>Subnet_Id</td>
-            <td>Subnet_Name</td>
-	    <td>CIDR</td>
-            <td>AWS_id</td>
-        </tr>
-        </thead>
-        <tbody>
-	{% for subnet in subnet_vpc.subnet_set.all %}	
-        <tr>
-                <form method="post" role="form">{% csrf_token %}
-		<td>{{ subnet.id  }}</td>
-                <td>{{ subnet.name }}</td>
-                <td>{{ subnet.cidr }}</td>
-                <td>{{ subnet.aws_id }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-
-
-</table>
-
+    {{ vpc_data|jsonify }}
 {% endblock %}
 

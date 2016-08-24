@@ -12,14 +12,6 @@ from django.db.models import Prefetch
 from models import Vpc, Subnet, Instance
 from pprint import pprint
 
-"""
-def index(request):
-    #conn = boto.connect_vpc()
-    #vpc_list = conn.get_all_vpcs()
-    vpc_list = Vpc.objects.all()
-    return TemplateResponse(request, 'networks/index.html', {'vpc_list': vpc_list})
-"""
-
 class IndexView(ListView):
     model = Vpc
     template_name = "networks/index.html"
@@ -45,14 +37,37 @@ class VpcView(DetailView):
     template_name = "networks/vpc.html"
 
     def get(self, request, *args, **kwargs):
+        subnets = {}
+
+        vpc_instance = Vpc.objects.prefetch_related('subnet_set').get(pk=self.kwargs['pk'])
+
+        for instance in Instance.objects.filter(subnet__vpc=vpc_instance).select_related('subnet'):
+            if instance.subnet_id not in subnets:
+                subnets[instance.subnet_id] = {
+                    'cidr': instance.subnet.cidr,
+                    'name': instance.subnet.name,
+                    'zone': instance.subnet.availability_zone,
+                    'Instances': [],
+                }
+            subnets[instance.subnet_id]['Instances'].append({
+                'name': instance.name,
+                'type': instance.type,
+            })
+
+        vpc_data = {
+                'name': vpc_instance.name,
+                'cidr': vpc_instance.cidr,
+                'Subnets': subnets.values(),
+            }
+
         # http://makina-corpus.com/blog/metier/2015/how-to-improve-prefetch_related-performance-with-the-prefetch-object
         # https://timmyomahony.com/blog/misconceptions-select_related-in-django/
         #subnet_vpc = Subnet.objects.prefetch_related(Prefetch('vpc', queryset=Vpc.objects.filter(id=kwargs['pk']))).all()
         #subnet_vpc.filter(id=4)
         # Maybe prefetch_related will be needed here some day.
-        subnet_vpc = Vpc.objects.prefetch_related('subnet_set').get(pk=self.kwargs['pk'])
-        pprint(subnet_vpc)
-        return TemplateResponse( request, 'networks/vpc.html', {'subnet_vpc': subnet_vpc})
+        # subnet_vpc = Vpc.objects.prefetch_related('subnet_set').get(pk=self.kwargs['pk'])
+        # pprint(subnet_vpc)
+        return TemplateResponse( request, 'networks/vpc.html', {'subnets': subnets, 'vpc_data': vpc_data})
 
 class VpcCreate(CreateView):
     model = Vpc
