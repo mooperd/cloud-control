@@ -220,24 +220,6 @@ class AWSProvider(CloudProvider):
                 except boto.exception.EC2ResponseError:
                     time.sleep(WAITING_TIME)
 
-    def delete_subnet(self, region_name, subnet_id):
-        vpc_conn = self._get_vpc_connection(region_name)
-        log(
-            region_name,
-            "shutting down subnet '" + subnet_id + "'"
-        )
-
-        deleted = False
-        while not deleted:
-            try:
-                vpc_conn.delete_subnet(subnet_id)
-                deleted = True
-
-            except boto.exception.EC2ResponseError as e:
-                if (e.code == "DependencyViolation"):
-                    time.sleep(5)
-
-
     def delete_vpc_old(self, region_name, vpc_id):
         # Completely deletes a VPC with all its subnets and instances
         vpc_conn = self._get_vpc_connection(region_name)
@@ -271,7 +253,7 @@ class AWSProvider(CloudProvider):
     # def create_subnet(self, vpc_id, subnet_name, cidr_block, availability_zone):
     def create_subnet(self, vpc_id, subnet_name, cidr_block):
         log(
-            """availability_zone""",
+            "availability_zone support needs fixing",
             "Creating Subnet '" + subnet_name + "'"
         )
 
@@ -280,6 +262,25 @@ class AWSProvider(CloudProvider):
         subnet = conn.create_subnet(vpc_id, cidr_block)
         self._tag_with_name(subnet, subnet_name)
         return subnet.id
+
+    # def delete_subnet(self, region_name, subnet_id):
+    # need to fix region and az support.
+    def delete_subnet(self, subnet_id):
+        conn = boto.connect_vpc()
+        log(
+            "availability_zone support needs fixing",
+            "shutting down subnet '" + subnet_id + "'"
+        )
+
+        deleted = False
+        while not deleted:
+            try:
+                conn.delete_subnet(subnet_id)
+                deleted = True
+
+            except boto.exception.EC2ResponseError as e:
+                if (e.code == "DependencyViolation"):
+                    time.sleep(5)
 
     def get_vpc_status(self, region_name, vpc_id):
         vpc_conn = self._get_vpc_connection(region_name)
