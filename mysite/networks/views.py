@@ -1,4 +1,3 @@
-import boto
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -6,11 +5,8 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
 from .forms import InstanceForm, SubnetForm, VpcForm
-from django.db.models import Prefetch
 from models import Vpc, Subnet, Instance
-from pprint import pprint
 
 class IndexView(ListView):
     model = Vpc
@@ -19,10 +15,11 @@ class IndexView(ListView):
 class VpcDeploy(View):
     model = Vpc
 
-    def get(self, request, *args, **kwargs):
-        deploy = get_object_or_404(self.model, id=kwargs['pk'])
-        deploy.deploy()
-        return redirect("/networks")
+
+    # def get(self, request, *args, **kwargs):
+    #     deploy = get_object_or_404(self.model, id=kwargs['pk'])
+    #     deploy.deploy()
+    #     return redirect("/networks")
 
 class VpcUndeploy(View):
     model = Vpc

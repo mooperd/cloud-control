@@ -264,14 +264,20 @@ class AWSProvider(CloudProvider):
                     time.sleep(5)
 
 
-    def create_subnet(self, vpc_id, subnet_name, cidr_block, availability_zone):
+    # Amazon expects that the availability zone includes the name of the region "eu-west-1a"
+    # rather than "a".... *sigh*. Need to find a way to pass this fucnction the region.
+    # what is happening with regions? Are we just going to rely on the boto config at ~/.aws/config?
+    # does this even work?
+    # def create_subnet(self, vpc_id, subnet_name, cidr_block, availability_zone):
+    def create_subnet(self, vpc_id, subnet_name, cidr_block):
         log(
-            availability_zone,
+            """availability_zone""",
             "Creating Subnet '" + subnet_name + "'"
         )
 
         conn = boto.connect_vpc()
-        subnet = conn.create_subnet(vpc_id, cidr_block, availability_zone)
+        # subnet = conn.create_subnet(vpc_id, cidr_block, availability_zone)
+        subnet = conn.create_subnet(vpc_id, cidr_block)
         self._tag_with_name(subnet, subnet_name)
         return subnet.id
 

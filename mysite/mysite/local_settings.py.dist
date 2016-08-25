@@ -1,0 +1,10 @@
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'CloudControl',
+        'USER': 'database_user',
+        'PASSWORD': 'database_password',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}
