@@ -141,9 +141,11 @@ class VpcView(View):
         vpc_instance = Vpc.objects.prefetch_related('subnet_set').get()
 
         # Build the rest of the data structure by iterating through the various entities
+        # Subnets without instances are not selected which is probably a bug.
         for instance in Instance.objects.filter(subnet__vpc=vpc_instance).select_related('subnet'):
             if instance.subnet_id not in subnets:
                 subnets[instance.subnet_id] = {
+                    'id': instance.subnet.pk,
                     'cidr': instance.subnet.cidr,
                     'name': instance.subnet.name,
                     'zone': instance.subnet.availability_zone,
@@ -172,7 +174,7 @@ class VpcView(View):
     """
     This function receives the request and routes it to the appropriate function depending on the URL
     """
-    def get(self, request, **kwargs):
+    def post(self, request, **kwargs):
         template_name = "networks/vpc.html"
         if self.kwargs['action']=='deploy':
             self.deploy()
@@ -186,17 +188,31 @@ class VpcView(View):
         infrastructure = self.build_infrastructure()
         return TemplateResponse(request, 'networks/vpc.html', {'vpc_data': infrastructure})
 
-    # Not sure this is the most efficient way of referancing the objects that should be created but it works :)
+    def get(self, request, **kwargs):
+        template_name = "networks/vpc.html"
+        if self.kwargs['action']=='view':
+            # pick up the changes in the model before returning the call.
+            infrastructure = self.build_infrastructure()
+            return TemplateResponse(request, 'networks/vpc.html', {'vpc_data': infrastructure})
+        else:
+            error = "%s is not a valid action" % self.kwargs['action']
+            raise ValueError(error)
+
+    # Not sure this is the most efficient way of referencing the objects that should be created but it works :)
     def deploy(self):
         infrastructure = self.build_infrastructure()
         infrastructure["object"].deploy()
         for subnet in infrastructure["Subnets"]:
             subnet["object"].deploy(vpc_id=infrastructure["object"].aws_id)
+            for instance in subnet["Instances"]:
+                instance["object"].deploy(subnet_id=subnet["object"].aws_id)
 
     # We dont need to pass anything to the undeploy as it will know its own aws_id.
     # undeploy should do things in the opposit order as deploy.
     def undeploy(self):
         infrastructure = self.build_infrastructure()
         for subnet in infrastructure["Subnets"]:
+            for instance in subnet["Instances"]:
+                instance["object"].undeploy()
             subnet["object"].undeploy()
         infrastructure["object"].undeploy()

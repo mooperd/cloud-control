@@ -1,6 +1,71 @@
-{% load jsonify %}
+{% extends 'base.html' %}
 {% block main_contents %}
     <h1>Success probably</h1>
-    {{ vpc_data}}
+    <div class="media">
+        <h4 class="media-heading">VPC</h4>
+        <div class="media-body">
+            <table class="table table-bordered table-responsive">
+                <thead >
+                <tr>
+                    <td>id</td>
+                    <td>Name</td>
+                    <td>CIDR</td>
+                    <td>AWS_id</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ vpc_data.id }}</td>
+                    <td>{{ vpc_data.name }}</td>
+                    <td>{{ vpc_data.cidr }}</td>
+                    <td>{{ vpc_data.aws_id }}</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="media">
+                <h4 class="media-heading">SUBNETS</h4>
+                <div class="media-body">
+                    <table class="table table-bordered table-responsive">
+                        <thead >
+                        <tr>
+                            <td>id</td>
+                            <td>Name</td>
+                            <td>CIDR</td>
+                            <td>AWS_id</td>
+                            <td>Instances</td>
+                            <td>Instance ID</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for subnet in vpc_data.Subnets %}
+                            <tr>
+                                <td>{{ subnet.id }}</td>
+                                <td>{{ subnet.name }}</td>
+                                <td>{{ subnet.cidr }}</td>
+                                <td>{{ subnet.aws_id }}</td>
+                                <td>
+                                    <ul>
+                                        {% for instance in subnet.Instances %}
+                                            <li>{{ instance.name }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td>
+                                    <ul>
+                                        {% for instance in subnet.Instances %}
+                                            <li>{{ instance.aws_id }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ vpc_data }}
 {% endblock %}
 

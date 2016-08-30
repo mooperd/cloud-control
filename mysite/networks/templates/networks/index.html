@@ -1,28 +1,28 @@
 {% extends 'base.html' %}
 {% block main_contents %}
-This is index.html
-<table class="table table-bordered table-responsive">
+    This is index.html
+    <table class="table table-bordered table-responsive">
         <thead >
         <tr>
             <td>id</td>
-	    <td>Name</td>
+            <td>Name</td>
             <td>CIDR</td>
-	    <td>AWS_id</td>
-	    <td>Deploy</td>
-            <td>Undeploy</td>	  
+            <td>AWS_id</td>
+            <td>Deploy</td>
+            <td>Undeploy</td>
         </tr>
         </thead>
         <tbody>
         {% for vpc in vpc_list %}
-	<tr>
-		<form method="post" role="form">{% csrf_token %}
-		<td><a href="vpc/{{ vpc.id  }}/">{{ vpc.id  }}</a></td>
-                <td>{{ vpc.name }}</td>
-                <td>{{ vpc.cidr }}</td>
-		<td>{{ vpc.aws_id }}</td>
-		<td><form method="post" role="form">{% csrf_token %}<button type="submit" formmethod="get" formaction="vpc/deploy/{{ vpc.id  }}/"class="btn btn-primary">Deploy</button></form></td>
-                <td><form method="post" role="form">{% csrf_token %}<button type="submit" formmethod="get" formaction="vpc/undeploy/{{ vpc.id  }}/"class="btn btn-primary">Undeploy</button></form></td>
-	</tr>
+            <tr>
+                <form method="post" role="form">{% csrf_token %}
+                    <td><a href="vpc/{{ vpc.id  }}/view/">{{ vpc.id  }}</a></td>
+                    <td>{{ vpc.name }}</td>
+                    <td>{{ vpc.cidr }}</td>
+                    <td>{{ vpc.aws_id }}</td>
+                    <td><form method="post" role="form">{% csrf_token %}<button type="submit" formmethod="post" formaction="vpc/{{ vpc.id  }}/deploy/"class="btn btn-primary">Deploy</button></form></td>
+                    <td><form method="post" role="form">{% csrf_token %}<button type="submit" formmethod="post" formaction="vpc/{{ vpc.id  }}/undeploy/"class="btn btn-primary">Undeploy</button></form></td>
+            </tr>
         {% endfor %}
         </tbody>
 

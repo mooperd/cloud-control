@@ -3,7 +3,10 @@ import boto.ec2
 import boto.iam
 import boto.vpc
 import time
+import hashlib
+import random
 from jinja2 import Template
+
 
 from . import CloudProvider, log
 
@@ -101,10 +104,17 @@ class AWSProvider(CloudProvider):
         iam_conn.put_role_policy(role_name, profile_name, policy)
         return role_name, profile_name
 
-    def create_instance(self, region, subnet_id, name, is_privileged=False):
+    # def create_instance(self, ""region"", subnet_id, name, is_privileged=False):
+    def create_instance(self, subnet_id, name):
+        # when we delete an instance on AWS it takes a while for it to disapear which causes an error if you want to
+        # immeditately redploy. To avoid this we relabel it with something random.
+
         """ Creates an instance """
         instance_profile = None
-        key_pair_name = ""
+        is_privileged = False
+        key_pair_name = "testing_key_pair"
+        region='us-east-1'
+        """
         if is_privileged:
             log(
                 region,
@@ -119,38 +129,69 @@ class AWSProvider(CloudProvider):
             time.sleep(10)
         else:
             key_pair_name = "cloudctl.profile." + name + str(int(time.time()))
-            log(
-                region,
-                "creating instance '" + name + "'"
-            )
+        """
 
-        ec2_conn = self._get_ec2_connection(region)
+        log(
+            region,
+            "creating instance '" + name + "'"
+        )
 
-        created = False
-        while not created:
-            try:
-                key_pair = ec2_conn.create_key_pair(key_pair_name)
-                created = True
-            except boto.exception.EC2ResponseError:
-                time.sleep(5)
+        ec2_conn = boto.connect_vpc()
+
+
+        #created = False
+        #while not created:
+        #    try:
+        #        key_pair = ec2_conn.create_key_pair(key_pair_name)
+        #        created = True
+        #    except boto.exception.EC2ResponseError:
+        #        time.sleep(5)
 
         created = False
         while not created:
             try:
                 reservation = ec2_conn.run_instances(
-                    'ami-89634988',
+                    'ami-6d1c2007',
                     instance_type='t2.micro',
                     subnet_id=subnet_id,
-                    key_name=instance_profile,
-                    instance_profile_name=instance_profile
+                    key_name=key_pair_name,
+                    #instance_profile_name=instance_profile
                 )
                 created = True
             except:
-                time.sleep(5)
+                raise
 
+        # when we delete an instance on AWS it takes a while for it to disapear which causes an error if you want to
+        # immeditately redploy. To avoid this we append the last 4 characters of the instance ID to the name.
+        # It might be a better idea to do this on instance deletion.
+        name = name + " - " + reservation.instances[0].id[-4:]
         self._tag_with_name(reservation.instances[0], name)
 
-        return reservation.instances[0].id, key_pair
+        return reservation.instances[0].id
+
+    def delete_instance(self, instance_id):
+        instance_ids = []
+        region_name = "us-east-1"
+        conn = boto.connect_vpc()
+        log(
+            region_name,
+            "deleting instance '" + instance_id + "'"
+        )
+
+        instance_ids.append(instance_id)
+
+        if instance_ids:
+            log(
+                region_name,
+                "shutting down " + str(len(instance_ids)) + " instances..."
+            )
+        shutdown = False
+        while not shutdown:
+            try:
+                conn.terminate_instances(instance_ids=instance_ids)
+                shutdown = True
+            except boto.exception.EC2ResponseError:
+                raise
 
     def create_vpc(self, vpc_name, vpc_region, cidr_block):
         """ Creates a VPC """
@@ -173,16 +214,19 @@ class AWSProvider(CloudProvider):
         except:
             raise
 
-    def shutdown_all_instances_in_subnet(self, region_name, subnet_id):
-        conn = self._get_ec2_connection(region_name)
-
+    def shutdown_all_instances_in_subnet(self, subnet_id):
+        region= "us-east-1"
+        conn = boto.connect_vpc()
         instance_ids = []
+        region_name = "us-east-1"
         instance_profiles = []
 
         # find all instances in subnet
         for reservation in conn.get_all_reservations(
                 filters=[("subnet-id", subnet_id)]
         ):
+            # TODO: delete all volumes
+
             for instance in reservation.instances:
                 # set instance block devices to 'terminate on shutdown'
                 instance.modify_attribute(
@@ -193,9 +237,11 @@ class AWSProvider(CloudProvider):
                 # collect instance_ids
                 instance_ids.append(instance.id)
                 # collect instance_profiles
+                """
                 instance_profiles.append(
                     instance.instance_profile["arn"].split("/")[1]
                 )
+                """
 
         # TODO: delete all collected instance_profiles
         """
@@ -219,32 +265,6 @@ class AWSProvider(CloudProvider):
                     shutdown = True
                 except boto.exception.EC2ResponseError:
                     time.sleep(WAITING_TIME)
-
-    def delete_vpc_old(self, region_name, vpc_id):
-        # Completely deletes a VPC with all its subnets and instances
-        vpc_conn = self._get_vpc_connection(region_name)
-
-        # delete all subnets
-        for subnet in vpc_conn.get_all_subnets(filters=[('vpcId', vpc_id)]):
-            self.shutdown_all_instances_in_subnet(region_name, subnet.id)
-            self.delete_subnet(region_name, subnet.id)
-
-        # delete vpc
-        deleted = False
-        log(
-            region_name,
-            "shutting down VPC '" + vpc_id + "'"
-        )
-
-        while not deleted:
-            try:
-                result = vpc_conn.delete_vpc(vpc_id)
-                deleted = True
-                return result
-            except boto.exception.EC2ResponseError as e:
-                if (e.code == "DependencyViolation"):
-                    time.sleep(5)
-
 
     # Amazon expects that the availability zone includes the name of the region "eu-west-1a"
     # rather than "a".... *sigh*. Need to find a way to pass this fucnction the region.
